@@ -82,7 +82,7 @@ using namespace std;
 
 int confidence;
 bool computeDepth;
-bool grabbing=false;
+bool grabbing = false;
 int openniDepthMode = 0; // 16 bit UC data in mm else 32F in m, for more info http://www.ros.org/reps/rep-0118.html
 
 // Point cloud variables
@@ -94,17 +94,17 @@ ros::Time point_cloud_time;
  * \param name : the path to the file
  */
 bool file_exist(const std::string& name) {
-  struct stat buffer;   
-  return (stat(name.c_str(), &buffer) == 0); 
+    struct stat buffer;
+    return (stat(name.c_str(), &buffer) == 0);
 }
 
-/* \brief Image to ros message conversion 
+/* \brief Image to ros message conversion
  * \param img : the image to publish
  * \param encodingType : the sensor_msgs::image_encodings encoding type
  * \param frameId : the id of the reference frame of the image
  * \param t : the ros::Time to stamp the image
-*/
-sensor_msgs::ImagePtr imageToROSmsg(cv::Mat img, const std::string encodingType, std::string frameId, ros::Time t){
+ */
+sensor_msgs::ImagePtr imageToROSmsg(cv::Mat img, const std::string encodingType, std::string frameId, ros::Time t) {
     sensor_msgs::ImagePtr ptr = boost::make_shared<sensor_msgs::Image>();
     sensor_msgs::Image& imgMessage = *ptr;
     imgMessage.header.stamp = t;
@@ -113,16 +113,16 @@ sensor_msgs::ImagePtr imageToROSmsg(cv::Mat img, const std::string encodingType,
     imgMessage.width = img.cols;
     imgMessage.encoding = encodingType;
     int num = 1; //for endianness detection
-    imgMessage.is_bigendian = !(*(char *)&num == 1);
+    imgMessage.is_bigendian = !(*(char *) &num == 1);
     imgMessage.step = img.cols * img.elemSize();
     size_t size = imgMessage.step * img.rows;
     imgMessage.data.resize(size);
 
     if (img.isContinuous())
-        memcpy((char*)(&imgMessage.data[0]), img.data, size);
+        memcpy((char*) (&imgMessage.data[0]), img.data, size);
     else {
         uchar* opencvData = img.data;
-        uchar* rosData = (uchar*)(&imgMessage.data[0]);
+        uchar* rosData = (uchar*) (&imgMessage.data[0]);
         for (unsigned int i = 0; i < img.rows; i++) {
             memcpy(rosData, opencvData, imgMessage.step);
             rosData += imgMessage.step;
@@ -186,9 +186,9 @@ void publishTrackedFrame(Eigen::Matrix4f Path, tf2_ros::TransformBroadcaster &tr
  */
 void publishImage(cv::Mat img, image_transport::Publisher &pub_img, string img_frame_id, ros::Time t) {
     pub_img.publish(imageToROSmsg(img
-                                , sensor_msgs::image_encodings::BGR8
-                                , img_frame_id
-                                , t ));
+            , sensor_msgs::image_encodings::BGR8
+            , img_frame_id
+            , t));
 }
 
 /* \brief Publish a cv::Mat depth image with a ros Publisher
@@ -199,20 +199,18 @@ void publishImage(cv::Mat img, image_transport::Publisher &pub_img, string img_f
  */
 void publishDepth(cv::Mat depth, image_transport::Publisher &pub_depth, string depth_frame_id, ros::Time t) {
     string encoding;
-    if(openniDepthMode){
+    if (openniDepthMode) {
         depth *= 1000.0f;
         depth.convertTo(depth, CV_16UC1); // in mm, rounded
         encoding = sensor_msgs::image_encodings::TYPE_16UC1;
-    }
-    else {
+    } else {
         encoding = sensor_msgs::image_encodings::TYPE_32FC1;
     }
     pub_depth.publish(imageToROSmsg(depth
-                                , encoding
-                                , depth_frame_id
-                                , t ));
+            , encoding
+            , depth_frame_id
+            , t));
 }
-
 
 /* \brief Publish a pointCloud with a ros Publisher
  * \param width : the width of the point cloud
@@ -220,46 +218,46 @@ void publishDepth(cv::Mat depth, image_transport::Publisher &pub_depth, string d
  * \param pub_cloud : the publisher object to use
  */
 void publishPointCloud(int width, int height, ros::Publisher &pub_cloud) {
-    
-        pcl::PointCloud<pcl::PointXYZRGB> point_cloud;
-        point_cloud.width = width;
-        point_cloud.height = height;
-        int size = width*height;
-        point_cloud.points.resize(size);
-        int index4 = 0;
-        float color;
 
-        int point_step = cloud.channels * cloud.getDataSize();
-        int row_step = point_step * width;
+    pcl::PointCloud<pcl::PointXYZRGB> point_cloud;
+    point_cloud.width = width;
+    point_cloud.height = height;
+    int size = width*height;
+    point_cloud.points.resize(size);
+    int index4 = 0;
+    float color;
 
-        float* cpu_cloud;
-        cpu_cloud = (float*)malloc(row_step*height);
+    int point_step = cloud.channels * cloud.getDataSize();
+    int row_step = point_step * width;
 
-        cudaError_t err = cudaMemcpy2D(
-        	cpu_cloud, row_step, cloud.data, cloud.getWidthByte(),
-        	row_step, height, cudaMemcpyDeviceToHost);
-    
-        for (int i = 0; i < size; i++) {
-            if (cpu_cloud[index4 + 2] > 0) { // Check if it's an unvalid point, the depth is more than 0
-                index4 += 4;
-                continue;
-            }
-            point_cloud.points[i].y = -cpu_cloud[index4++];
-            point_cloud.points[i].z = cpu_cloud[index4++];
-            point_cloud.points[i].x = -cpu_cloud[index4++];
-            point_cloud.points[i].rgb = cpu_cloud[index4++];
+    float* cpu_cloud;
+    cpu_cloud = (float*) malloc(row_step * height);
+
+    cudaError_t err = cudaMemcpy2D(
+            cpu_cloud, row_step, cloud.data, cloud.getWidthByte(),
+            row_step, height, cudaMemcpyDeviceToHost);
+
+    for (int i = 0; i < size; i++) {
+        if (cpu_cloud[index4 + 2] > 0) { // Check if it's an unvalid point, the depth is more than 0
+            index4 += 4;
+            continue;
         }
+        point_cloud.points[i].y = -cpu_cloud[index4++];
+        point_cloud.points[i].z = cpu_cloud[index4++];
+        point_cloud.points[i].x = -cpu_cloud[index4++];
+        point_cloud.points[i].rgb = cpu_cloud[index4++];
+    }
 
-        sensor_msgs::PointCloud2 output;
-        pcl::toROSMsg(point_cloud, output); // Convert the point cloud to a ROS message
-        output.header.frame_id = point_cloud_frame_id; // Set the header values of the ROS message
-        output.header.stamp = point_cloud_time;
-        output.height = height;
-        output.width = width;
-        output.is_bigendian = false;
-        output.is_dense = false;
-        pub_cloud.publish(output);
-        free(cpu_cloud);
+    sensor_msgs::PointCloud2 output;
+    pcl::toROSMsg(point_cloud, output); // Convert the point cloud to a ROS message
+    output.header.frame_id = point_cloud_frame_id; // Set the header values of the ROS message
+    output.header.stamp = point_cloud_time;
+    output.height = height;
+    output.width = width;
+    output.is_bigendian = false;
+    output.is_dense = false;
+    pub_cloud.publish(output);
+    free(cpu_cloud);
 }
 
 /* \brief Publish the informations of a camera with a ros Publisher
@@ -347,7 +345,7 @@ void callback(zed_ros_wrapper::ZedConfig &config, uint32_t level) {
     confidence = config.confidence;
 }
 
-int main(int argc, char **argv) {
+void loop(int zed_id, std::string svo_path = "") {
     // Launch file parameters
     int resolution = sl::zed::HD720;
     int quality = sl::zed::MODE::PERFORMANCE;
@@ -356,6 +354,8 @@ int main(int argc, char **argv) {
     string odometry_DB = "";
 
     std::string img_topic = "image_rect";
+    std::string zed_multi_suff = "";
+    if (zed_id > 0) zed_multi_suff = "_" + to_string(zed_id);
 
     // Set the default topic names
     string rgb_topic = "rgb/" + img_topic;
@@ -386,8 +386,7 @@ int main(int argc, char **argv) {
     string odometry_frame_id = "/zed_initial_frame";
     string odometry_transform_frame_id = "/zed_tracked_frame";
 
-    ros::init(argc, argv, "zed_depth_stereo_wrapper_node");
-    ROS_INFO("ZED_WRAPPER Node initialized");
+
 
     ros::NodeHandle nh;
     ros::NodeHandle nh_ns("~");
@@ -403,36 +402,53 @@ int main(int argc, char **argv) {
         ROS_INFO_STREAM("Openni depth mode activated");
 
     nh_ns.getParam("rgb_topic", rgb_topic);
+    rgb_topic += zed_multi_suff;
     nh_ns.getParam("rgb_cam_info_topic", rgb_cam_info_topic);
+    rgb_cam_info_topic += zed_multi_suff;
     nh_ns.getParam("rgb_frame_id", rgb_frame_id);
+    rgb_frame_id += zed_multi_suff;
 
     nh_ns.getParam("left_topic", left_topic);
+    left_topic += zed_multi_suff;
     nh_ns.getParam("left_cam_info_topic", left_cam_info_topic);
+    left_cam_info_topic += zed_multi_suff;
     nh_ns.getParam("left_frame_id", left_frame_id);
+    left_frame_id += zed_multi_suff;
 
     nh_ns.getParam("right_topic", right_topic);
+    right_topic += zed_multi_suff;
     nh_ns.getParam("right_cam_info_topic", right_cam_info_topic);
+    right_cam_info_topic += zed_multi_suff;
     nh_ns.getParam("right_frame_id", right_frame_id);
+    right_frame_id += zed_multi_suff;
 
     nh_ns.getParam("depth_topic", depth_topic);
+    depth_topic += zed_multi_suff;
     nh_ns.getParam("depth_cam_info_topic", depth_cam_info_topic);
+    depth_cam_info_topic += zed_multi_suff;
     nh_ns.getParam("depth_frame_id", depth_frame_id);
+    depth_frame_id += zed_multi_suff;
 
     nh_ns.getParam("point_cloud_topic", point_cloud_topic);
+    point_cloud_topic += zed_multi_suff;
     nh_ns.getParam("cloud_frame_id", cloud_frame_id);
+    cloud_frame_id += zed_multi_suff;
 
     nh_ns.getParam("odometry_topic", odometry_topic);
+    odometry_topic += zed_multi_suff;
     nh_ns.getParam("odometry_frame_id", odometry_frame_id);
+    odometry_frame_id += zed_multi_suff;
     nh_ns.getParam("odometry_transform_frame_id", odometry_transform_frame_id);
+    odometry_transform_frame_id += zed_multi_suff;
 
     // Create the ZED object
     std::unique_ptr<sl::zed::Camera> zed;
-    if (argc == 2) {
-        zed.reset(new sl::zed::Camera(argv[1])); // Argument "svo_file" in launch file
-        ROS_INFO_STREAM("Reading SVO file : " << argv[1]);
+    if (!svo_path.empty()) {
+        zed.reset(new sl::zed::Camera(svo_path)); // Argument "svo_file" in launch file
+        ROS_INFO_STREAM("Reading SVO file : " << svo_path);
     } else {
-        zed.reset(new sl::zed::Camera(static_cast<sl::zed::ZEDResolution_mode> (resolution), rate));
-        ROS_INFO_STREAM("Using ZED Camera");
+        zed.reset(new sl::zed::Camera(static_cast<sl::zed::ZEDResolution_mode> (resolution), rate, zed_id));
+        ROS_INFO_STREAM("Using ZED Camera " << zed_id);
     }
 
     // Try to initialize the ZED
@@ -546,7 +562,7 @@ int main(int argc, char **argv) {
                 computeDepth = (depth_SubNumber + cloud_SubNumber + odom_SubNumber) > 0; // Detect if one of the subscriber need to have the depth information
                 ros::Time t = ros::Time::now(); // Get current time
 
-                grabbing=true;
+                grabbing = true;
                 if (computeDepth) {
                     int actual_confidence = zed->getConfidenceThreshold();
                     if (actual_confidence != confidence)
@@ -555,7 +571,7 @@ int main(int argc, char **argv) {
                 } else
                     old_image = zed->grab(static_cast<sl::zed::SENSING_MODE> (sensing_mode), false, false); // Ask to not compute the depth
 
-                grabbing=false;
+                grabbing = false;
 
                 if (old_image) { // Detect if a error occurred (for example: the zed have been disconnected) and re-initialize the ZED
                     ROS_DEBUG("Wait for a new image to proceed");
@@ -563,13 +579,13 @@ int main(int argc, char **argv) {
                     if ((t - old_t).toSec() > 5) {
                         // delete the old object before constructing a new one
                         zed.reset();
-                        if (argc == 2) {
-                            zed.reset(new sl::zed::Camera(argv[1])); // Argument "svo_file" in launch file
-                            ROS_INFO_STREAM("Reading SVO file : " << argv[1]);
-                        } else {
-                            zed.reset(new sl::zed::Camera(static_cast<sl::zed::ZEDResolution_mode> (resolution), rate));
-                            ROS_INFO_STREAM("Using ZED Camera");
-                        }
+						if (!svo_path.empty()) {
+							zed.reset(new sl::zed::Camera(svo_path)); // Argument "svo_file" in launch file
+							ROS_INFO_STREAM("Reading SVO file : " << svo_path);
+						} else {
+							zed.reset(new sl::zed::Camera(static_cast<sl::zed::ZEDResolution_mode> (resolution), rate, zed_id));
+							ROS_INFO_STREAM("Using ZED Camera " << zed_id);
+						}
                         ROS_INFO("Reinit camera");
                         ERRCODE err = ERRCODE::ZED_NOT_AVAILABLE;
                         while (err != SUCCESS) {
@@ -650,7 +666,54 @@ int main(int argc, char **argv) {
         }
     } catch (...) {
         ROS_ERROR("Unknown error.");
-        return 1;
+    }
+}
+
+inline void split(const std::string &s, char delim, std::vector<std::string> &elems) {
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+}
+
+int main(int argc, char **argv) {
+    
+    ros::init(argc, argv, "zed_depth_stereo_wrapper_node");
+    ROS_INFO("ZED_WRAPPER Node initialized");
+    
+    // Parse SVO paths given (they should be separated by ';')
+    std::vector<std::string> svo_paths;
+    if(argc == 2) {
+		std::string svo_paths_raw(argv[1]);
+		split(svo_paths_raw, ';', svo_paths);
+	}
+
+    cout << "Number of ZED from SVO : " << svo_paths.size() << ", Number of Live ZED : " << sl::zed::Camera::isZEDconnected() << endl;
+
+    int zed_live = sl::zed::Camera::isZEDconnected()-1;
+    std::vector<std::thread*> threads;
+
+    // Launch live ZED first
+    int i = 0;
+    for (i = 0; i <= zed_live; i++)
+        threads.push_back(new std::thread(loop, i, ""));
+
+    // Launch SVO ZED
+    for (auto &it : svo_paths)
+        threads.push_back(new std::thread(loop, i++, it));
+
+    while (ros::ok()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    // Wait for every ZED to stop
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    for (int j = 0; j < threads.size(); j++) {
+        threads[j]->join();
+        delete threads[j];
     }
 
     ROS_INFO("Quitting zed_depth_stereo_wrapper_node ...\n");

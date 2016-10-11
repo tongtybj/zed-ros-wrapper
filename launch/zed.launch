@@ -2,7 +2,7 @@
 
   <include file="$(find zed_wrapper)/launch/zed_tf.launch" />
 
-  <arg name="svo_file" default=""/>
+  <arg name="svo_file" default=""/> <!-- should be like : path/to/svo1;path/to/svo2  -->
   
       <param name="robot_description" textfile="$(find zed_wrapper)/urdf/zed.urdf" />
 
