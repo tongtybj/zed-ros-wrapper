@@ -1,4 +1,8 @@
 <launch>
+  <arg name="resolution" default="2" />
+  <arg name="quality" default="1" />
+  <arg name="sensing_mode" default="1" />
+  <arg name="frame_rate" default="60" />
 
   <include file="$(find zed_wrapper)/launch/zed_tf.launch" />
 
@@ -12,13 +16,12 @@
 
     <node name="zed_wrapper_node" pkg="zed_wrapper" type="zed_wrapper_node" args="$(arg svo_file)" output="screen">
 
-      <param name="resolution"            value="2" />
-      <param name="quality"               value="1" />
-      <param name="sensing_mode"          value="1" />
-      <param name="frame_rate"            value="60" />
+      <param name="resolution"            value="$(arg resolution)" />
+      <param name="quality"               value="$(arg quality)" />
+      <param name="sensing_mode"          value="$(arg sensing_mode)" />
+      <param name="frame_rate"            value="$(arg frame_rate)" />
       <param name="odometry_DB"           value="" />
       <param name="openni_depth_mode"     value="0" />
-      <param name="gpu_id"                value="-1" />
 
       <param name="rgb_topic"             value="rgb/image_rect_color" />
       <param name="rgb_cam_info_topic"    value="rgb/camera_info" />
