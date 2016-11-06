@@ -630,7 +630,11 @@ int main(int argc, char **argv) {
                 }
 
                 if(left_mono_SubNumber > 0) {
-                  cv::cvtColor(leftImRGB, leftImMono, CV_RGB2GRAY); // Convert to RGB
+
+		  if(left_rgb_SubNumber == 0)
+		    cv::cvtColor(slMat2cvMat(zed->retrieveImage(sl::zed::SIDE::LEFT)), leftImMono, CV_RGBA2GRAY); // Convert to RGB
+		  else
+		    cv::cvtColor(leftImRGB, leftImMono, CV_RGB2GRAY); // Convert to RGB
                   publishImage(leftImMono, sensor_msgs::image_encodings::MONO8, pub_left_mono, left_frame_id, t);
                 }
                 
@@ -642,7 +646,10 @@ int main(int argc, char **argv) {
                     publishImage(rightImRGB, sensor_msgs::image_encodings::BGR8, pub_right_rgb, right_frame_id, t);
                 }
                 if(right_mono_SubNumber > 0) {
-                  cv::cvtColor(rightImRGB, rightImMono, CV_RGB2GRAY); // Convert to RGB
+		  if(right_rgb_SubNumber == 0)
+		    cv::cvtColor(slMat2cvMat(zed->retrieveImage(sl::zed::SIDE::RIGHT)), rightImMono, CV_RGBA2GRAY); // Convert to RGB
+		  else
+		    cv::cvtColor(rightImRGB, rightImMono, CV_RGB2GRAY); // Convert to RGB
                   publishImage(rightImMono, sensor_msgs::image_encodings::MONO8, pub_right_mono, right_frame_id, t);
                 }
 
