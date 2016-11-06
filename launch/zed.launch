@@ -3,7 +3,9 @@
   <arg name="quality" default="1" />
   <arg name="sensing_mode" default="1" />
   <arg name="frame_rate" default="30" />
-  <arg name="small_frame_rate" default="4" />
+  <arg name="small_frame_rate" default="4.0" />
+  <arg name="small_width" default="160" />
+  <arg name="small_height" default="90" />
 
   <include file="$(find zed_wrapper)/launch/zed_tf.launch" />
 
@@ -22,6 +24,8 @@
       <param name="sensing_mode"          value="$(arg sensing_mode)" />
       <param name="frame_rate"            value="$(arg frame_rate)" />
       <param name="small_frame_rate"      value="$(arg small_frame_rate)" />
+      <param name="small_width"           value="$(arg small_width)" />
+      <param name="small_height"           value="$(arg small_height)" />
       <param name="odometry_DB"           value="" />
       <param name="openni_depth_mode"     value="0" />
 

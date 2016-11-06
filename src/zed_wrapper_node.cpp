@@ -619,7 +619,6 @@ int main(int argc, char **argv) {
 		    publishImage(leftImRGB, sensor_msgs::image_encodings::BGR8, pub_left_rgb, left_frame_id, t);
 
                     //small image publish
-                    
                     if(t.toSec() - small_image_prev_time > 1 / (float)small_frame_rate)
                       {
                         cv::cvtColor(leftImRGB, leftImMono, CV_RGB2GRAY); // Convert to RGB
@@ -632,7 +631,17 @@ int main(int argc, char **argv) {
                 if(left_mono_SubNumber > 0) {
 
 		  if(left_rgb_SubNumber == 0)
-		    cv::cvtColor(slMat2cvMat(zed->retrieveImage(sl::zed::SIDE::LEFT)), leftImMono, CV_RGBA2GRAY); // Convert to RGB
+                    {
+                      cv::cvtColor(slMat2cvMat(zed->retrieveImage(sl::zed::SIDE::LEFT)), leftImMono, CV_RGBA2GRAY); // Convert to RGB
+                      //small image publish
+                      if(t.toSec() - small_image_prev_time > 1 / (float)small_frame_rate)
+                        {
+                          cv::resize(leftImMono, smallIm, cv::Size(small_width, small_height));
+                          publishImage(smallIm, sensor_msgs::image_encodings::MONO8, pub_small_image, left_frame_id, t);
+                          small_image_prev_time = t.toSec();
+                        }
+
+                    }
 		  else
 		    cv::cvtColor(leftImRGB, leftImMono, CV_RGB2GRAY); // Convert to RGB
                   publishImage(leftImMono, sensor_msgs::image_encodings::MONO8, pub_left_mono, left_frame_id, t);
